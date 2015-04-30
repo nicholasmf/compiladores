@@ -1,0 +1,93 @@
+options
+{
+	STATIC = false;
+}
+
+PARSER_BEGIN (Calculator)
+import java.io.PrintStream;
+public class Calculator
+{
+	public static void main (String args[])
+	throws ParseException, TokenMgrError, NumberFormatException
+	{
+		Calculator parser = new Calculator(System.in);
+		parser.Start(System.out);
+	}
+	double previousValues = 0.0;
+}
+PARSER_END (Calculator)
+
+TOKEN : { <EOL : "\n" | "\r" | "\r\n" > }
+TOKEN : { < PLUS : "+" > }
+TOKEN : { < MINUS : "-" > }
+TOKEN : { < MULTIPLY : "*" > }
+TOKEN : { < NUMBER : <DIGITS>> }
+TOKEN : { < #DIGITS : (["0"-"9"])+>}
+
+/* Start ::= (Expression <EOL> )* */
+/* Expression ::= Term (<PLUS> Term | <MINUS> Term)* */
+/* Term ::= Primary (<MULTIPLY> Primary)* */
+/* Primary ::= <NUMBER> */
+void Start (PrintStream printStream):
+{
+	double previousValue;
+}
+{
+	(
+		previousValue = Expression()
+		<EOL>
+		{ printStream.println (previousValue); }
+	)* 
+<EOF>
+}
+
+int Primary () :
+{
+	Token t;
+}
+{
+	t = <NUMBER>
+	{
+		try
+		{
+			return Integer.parseInt(t.image);
+		} catch (NumberFormatException e)
+		{
+			System.out.println("\nErro semantico na linha " + t.beginLine + ", coluna " + t.beginColumn + ": overflow"); 
+		}
+	}
+}
+
+int Term() :
+{
+	int i;
+	int value;
+}
+{
+	value = Primary()
+	(
+		< MULTIPLY>
+		i = Primary()
+		{ value *= i; }
+	)*
+	{ return value; }
+}
+
+int Expression () :
+{
+	int i;
+	int value;
+}
+{
+	value = Term()
+	(
+		<PLUS>
+		i = Term()
+		{ value += i; }
+	|
+		<MINUS>
+		i = Term()
+		{ value -= i; }
+	)*
+	{ return value; }
+}
