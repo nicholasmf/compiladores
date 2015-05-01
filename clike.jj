@@ -1,0 +1,352 @@
+/* Exemplo 1 do slide */
+
+options {
+	STATIC = false;
+}
+
+PARSER_BEGIN (clike)
+public class clike {
+	public static void main (String args[])
+		throws ParseException, TokenMgrError {
+			try 
+			{
+				clike parser = new clike(System.in);
+				parser.Program();
+			}
+			catch(ParseException e)
+			{
+				
+			}
+		}
+
+}
+PARSER_END (clike)
+
+TOKEN : { < EOL : "\n" | "\r" | "\r\n" > }
+TOKEN : { < SPACE : "\t" > }
+
+TOKEN : { < PLUS : "+" > }
+TOKEN : { < MINUS : "-" > }
+TOKEN : { < MULT : "*" > }
+TOKEN : { < DIV : "/" > }
+TOKEN : { < MOD : "%" > }
+TOKEN : { < LESS : "<" > }
+TOKEN : { < MORETHAN : ">" > }
+TOKEN : { < LESSEQ : "<=" > }
+TOKEN : { < MOREEQ : ">=" > }
+TOKEN : { < EQUAL : "==" > }
+TOKEN : { < NOTEQUAL : "!=" > }
+TOKEN : { <ASSIGN : "=" > }
+TOKEN : { < AND : "&&" > }
+TOKEN : { < OR : "||" > }
+TOKEN : { < NOT : "!" > }
+TOKEN : { < SEMICOLON : ";" > }
+TOKEN : { < COMMA : "," > }
+TOKEN : { < LPAREN : "(" > }
+TOKEN : { < RPAREN : ")" > }
+TOKEN : { < LBRACE : "{" > }
+TOKEN : { < RBRACE : "}" > }
+
+TOKEN : { < IF : "if" > }
+TOKEN : { < WHILE : "while" > }
+TOKEN : { < ELSE : "else" > }
+TOKEN : { < RET : "return" > }
+
+TOKEN : { < INT : "int" > }
+TOKEN : { < VOID : "void" > }
+
+TOKEN : { < NUMBER : ["0"-"9"](["0"-"9"])* > }
+TOKEN : { < IDENT : ["a"-"z","A"-"Z"](["a"-"z","A"-"Z","0"-"9","_"])* > }
+
+SKIP : { " " }
+
+void Program() :
+{ Token t; }
+{
+	(LOOKAHEAD(3)VariableDeclaration() Nothing())* (ProcedureDeclaration() Nothing())+
+	<EOF>
+}
+
+void ProcedureDeclaration() :
+{ Token t; }
+{
+	Type()
+	ProcedureHeading() (<EOL> | <SPACE>)*
+	t = <LBRACE> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tLBRACE\t\t" + t.image); }
+	(<EOL> | <SPACE> )*
+	ProcedureBody()
+	(<EOL> | <SPACE> )*
+	t = <RBRACE> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tRBRACE\t\t" + t.image); }
+	(<EOL> | <SPACE> )*
+}
+
+void ProcedureBody() :
+{ Token t; }
+{
+	(VariableDeclaration())*
+	( <EOL> | <SPACE>)*
+	StatementSequence()
+}
+
+void ProcedureHeading() :
+{ Token t; }
+{
+	t = <IDENT> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tIDENT\t\t" + t.image); } 
+	t = <LPAREN> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tLPAREN\t\t" + t.image); } 
+	[FormalParameters()]
+	t = <RPAREN> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tRPAREN\t\t" + t.image); }
+}
+
+void FormalParameters() :
+{ Token t; }
+{
+	FPSection()(<COMMA>FPSection())*
+}
+
+void FPSection() :
+{ Token t; }
+{
+	Type()
+	t = <IDENT> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tIDENT\t\t" + t.image); }
+}
+
+void VariableDeclaration() :
+{ Token t; }
+{
+	Type() IdentList()
+	t = <SEMICOLON> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tSEMICOLON\t\t" + t.image); }
+}
+
+void IdentList() :
+{ Token t; }
+{
+	t = <IDENT> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tIDENT\t\t" + t.image); }
+	(
+		t = <COMMA> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tCOMMA\t\t" + t.image); }
+		t = <IDENT> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tIDENT\t\t" + t.image); }
+	)*
+}
+
+void Type() :
+{ Token t; }
+{
+	t = <VOID> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tTYPE\t\t" + t.image); }
+	|
+	t = <INT> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tTYPE\t\t" + t.image); }
+}
+
+void StatementSequence() :
+{ Token t; }
+{
+	Statement()(Statement())*
+}
+
+void Statement() :
+{ Token t; }
+{
+	LOOKAHEAD(2)
+	Assignment() | ProcedureCall() | IfStatement() | WhileStatement() | Return()
+}
+
+void Return() :
+{ Token t; }
+{
+	t = <RET> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tRET\t\t" + t.image); }
+	Logical_OR()
+	t = <SEMICOLON> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tSEMICOLON\t\t" + t.image); }
+}
+
+void WhileStatement() :
+{ Token t; }
+{
+	t = <WHILE> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tWHILE\t\t" + t.image); }
+	t = <LPAREN> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tLPAREN\t\t" + t.image); }
+	Logical_OR()
+	t = <RPAREN> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tRPAREN\t\t" + t.image); }
+	t = <LBRACE> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tLBRACE\t\t" + t.image); }
+	StatementSequence()
+	t = <RBRACE> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tRBRACE\t\t" + t.image); }
+}
+
+void IfStatement() :
+{ Token t; }
+{
+	t = <IF> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tIF\t\t" + t.image); }
+	t = <LPAREN> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tLPAREN\t\t" + t.image); }
+	Logical_OR()
+	t = <RPAREN> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tRPAREN\t\t" + t.image); }
+	t = <LBRACE> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tLBRACE\t\t" + t.image); }
+	StatementSequence()
+	t = <RBRACE> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tRBRACE\t\t" + t.image); }
+	[
+		t = <ELSE> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tELSE\t\t" + t.image); }
+		t = <LBRACE> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tLBRACE\t\t" + t.image); }
+		StatementSequence()
+		t = <RBRACE> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tRBRACE\t\t" + t.image); }
+	]
+}
+
+void ProcedureCall() :
+{ Token t; }
+{
+	t = <IDENT> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tIDENT\t\t" + t.image); }
+	t = <LPAREN> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tLPAREN\t\t" + t.image); }
+	[ExpList()]
+	t = <RPAREN> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tRPAREN\t\t" + t.image); }
+	t = <SEMICOLON> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tSEMICOLON\t\t" + t.image); }
+}
+
+void FunctionCall() :
+{ Token t; }
+{
+	t = <IDENT> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tIDENT\t\t" + t.image); }
+	t = <LPAREN> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tLPAREN\t\t" + t.image); }
+	[ExpList()]
+	t = <RPAREN> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tRPAREN\t\t" + t.image); }
+	t = <SEMICOLON> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tSEMICOLON\t\t" + t.image); }
+}
+
+void ExpList() :
+{ Token t; }
+{
+	Logical_OR()
+	(
+		t = <COMMA> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tCOMMA\t\t" + t.image); }
+		Logical_OR()
+	)*
+}
+
+void Assignment() :
+{ Token t; }
+{
+	Designator()
+	t = <ASSIGN> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tASSIGN\t\t" + t.image); }
+	Logical_OR()
+	t = <SEMICOLON> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tSEMICOLON\t\t" + t.image); }
+}
+
+void Logical_OR() :
+{ Token t; }
+{
+	Logical_AND()
+	(
+		t = <OR> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tOR\t\t" + t.image); }
+		Logical_AND()
+	)*
+}
+
+void Logical_AND() :
+{ Token t; }
+{
+	Expression()
+	(
+		t = <AND> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tAND\t\t" + t.image); }
+		Expression()
+	)*
+}
+
+void Expression() :
+{ Token t; }
+{
+	EqualityExpr()
+	[
+		(
+			t = <EQUAL> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tEQUAL\t\t" + t.image); }
+		|
+			t = <NOTEQUAL> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tNOTEQUAL\t\t" + t.image); }
+		)
+		EqualityExpr()
+	]
+}
+
+void EqualityExpr() :
+{ Token t; }
+{
+	SimpleExpr()
+	[
+		(
+			t = <LESS> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tLESS\t\t" + t.image); }
+		|
+			t = <LESSEQ> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tLESSEQ\t\t" + t.image); }
+		|
+			t = <MORETHAN> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tMORETHAN\t\t" + t.image); }
+		|
+			t = <MOREEQ>
+		)
+		SimpleExpr()
+	]
+}
+
+void SimpleExpr() :
+{ Token t; }
+{
+	[
+		t = <PLUS> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tPLUS\t\t" + t.image); }
+	| 
+		t = <MINUS> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tMINUS\t\t" + t.image); }
+	]
+	Term()
+	(
+		(
+			t = <PLUS> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tPLUS\t\t" + t.image); }
+		|
+			t = <MINUS> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tMINUS\t\t" + t.image); }
+		)
+		Term()
+	)*
+}
+
+void Term() :
+{ Token t; }
+{
+	Unary()
+	(
+		(
+			t = <MULT> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tMULT\t\t" + t.image); }
+		|
+			t = <DIV> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tDIV\t\t" + t.image); }
+		|
+			t = <MOD> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tMOD\t\t" + t.image); }
+		)
+		Unary()
+	)*
+}
+
+void Unary() :
+{ Token t; }
+{
+	t = <NOT> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tNOT\t\t" + t.image); }
+	Unary() | Factor()
+}
+
+void Factor() :
+{ Token t; }
+{
+	LOOKAHEAD(2)
+	Designator()
+	|
+	t = <NUMBER> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tNUMBER\t\t" + t.image); }
+	|
+	t = <LPAREN> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tLPAREN\t\t" + t.image); }
+	Logical_OR()
+	t = <RPAREN> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tRPAREN\t\t" + t.image); }
+	|
+	FunctionCall()
+}
+
+void Designator() :
+{ Token t; }
+{
+	t = <IDENT>
+	{ System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tIDENT\t\t" + t.image); }
+}
+
+void Nothing():
+{}
+{
+	(
+		<EOL>
+	|
+		<SPACE>
+	)*
+}
