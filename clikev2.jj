@@ -72,13 +72,14 @@ TOKEN :
 TOKEN : { < NUMBER : ["0"-"9"](["0"-"9"])* > }
 TOKEN : { < IDENT : ["a"-"z","A"-"Z"](["a"-"z","A"-"Z","0"-"9","_"])* > }
 
-SKIP : { " " | "\n" | "\r" | "\r\n" | "\t" }
+TOKEN : { < SKIPI : "\t" | "\n" | "\r" | "\n\r" > }
+SKIP : { " " }
 
 
 void Program() :
 { Token t; }
 {
-	(LOOKAHEAD(3)VariableDeclaration() (SKIP)*)* (ProcedureDeclaration() (SKIP)*)+
+	(LOOKAHEAD(3)VariableDeclaration() Nothing() )* (ProcedureDeclaration() Nothing())+
 	<EOF>
 }
 
@@ -86,20 +87,20 @@ void ProcedureDeclaration() :
 { Token t; }
 {
 	Type()
-	ProcedureHeading() (<SKIP>)*
+	ProcedureHeading() Nothing()
 	t = <LBRACE> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tLBRACE\t\t" + t.image); }
-	(<SKIP>)*
+	Nothing()
 	ProcedureBody()
-	(<SKIP> )*
+	Nothing()
 	t = <RBRACE> { System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tRBRACE\t\t" + t.image); }
-	(<SKIP> )*
+	Nothing()
 }
 
 void ProcedureBody() :
 { Token t; }
 {
 	(VariableDeclaration())*
-	( <SKIP>)*
+	Nothing()
 	StatementSequence()
 }
 
@@ -354,4 +355,13 @@ void Designator() :
 {
 	t = <IDENT>
 	{ System.out.println ("@(" + t.beginLine + " , " + t.beginColumn + ")\t\tIDENT\t\t" + t.image); }
+}
+
+void Nothing() :
+{}
+{
+	(
+		LOOKAHEAD(2)
+		<SKIPI>
+	)*
 }
